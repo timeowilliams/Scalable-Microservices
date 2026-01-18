@@ -172,6 +172,38 @@ curl http://localhost:8000/sensors
 
 Visit `http://localhost:8000/docs` in your browser for FastAPI's automatic interactive API documentation.
 
+### Testing Docker Hub Images
+
+To verify the Docker Hub images work correctly, you can use the provided test script:
+
+```bash
+./test-dockerhub.sh
+```
+
+This script will:
+1. Pull the latest images from Docker Hub
+2. Start both services
+3. Test the `/health` and `/sensors` endpoints for both services
+4. Display formatted JSON responses
+
+Alternatively, you can manually test:
+
+```bash
+# Pull images
+docker pull timwillie73/node-sensor-service:latest
+docker pull timwillie73/python-sensor-service:latest
+
+# Start services
+docker run -d -p 3000:3000 --name node-sensor-service timwillie73/node-sensor-service:latest
+docker run -d -p 8000:8000 --name python-sensor-service timwillie73/python-sensor-service:latest
+
+# Wait a few seconds for services to start, then test
+curl http://localhost:3000/health
+curl http://localhost:3000/sensors
+curl http://localhost:8000/health
+curl http://localhost:8000/sensors
+```
+
 ## Project Structure
 
 ```
@@ -185,6 +217,30 @@ Visit `http://localhost:8000/docs` in your browser for FastAPI's automatic inter
 │   ├── requirements.txt
 │   └── main.py
 ├── docker-compose.yml
+├── docker-compose.hub.yml
+├── test-dockerhub.sh
 └── README.md
 ```
-# Scalable-Microservices
+
+## Reflection
+
+I chose the smart IoT domain because I find external sensor data relevant to my work for the Army/soldiers operating in the field and relying on sensor technology to fight in the battlefield. This domain provides a practical foundation that connects to real-world applications where sensor data collection, processing, and distribution are critical for operational success.
+
+For the two languages, I primarily use JavaScript/Node for frontend technologies and Python for data science tasks. It would be cool to compare both of them and optimize future microservices written in these languages. This project allows me to evaluate the performance, development experience, and ecosystem differences between Node.js and Python (FastAPI) in a microservices context, which will inform future architectural decisions.
+
+Everything worked smoothly during implementation - nothing confused me. The Docker containerization process was straightforward, and both services deployed without issues. The parallel implementation in both languages provided valuable insights into the tradeoffs between event-driven Node.js and async Python frameworks.
+
+
+## Screenshots
+
+### Health Endpoint Test
+
+![Health Endpoint Test](health_ping.png)
+
+*API client test showing successful GET request to `localhost:3000/health` (Node.js service). Response: `200 OK` in 38ms, returning `{"status": "ok", "service": "node"}`.*
+
+### Sensors Endpoint Test
+
+![Sensors Endpoint Test](sensors_ping.png)
+
+*API client test showing successful GET request to `localhost:8000/sensors` (Python service). Response: `200 OK` in 47ms, returning an array of sensor readings including temperature (temp_living_room, temp_bedroom), humidity (humidity_basement, humidity_living_room), and motion (motion_kitchen) sensors with timestamps.*
