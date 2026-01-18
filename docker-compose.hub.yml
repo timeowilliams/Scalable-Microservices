@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  node-api:
+    image: timwillie73/node-sensor-service:latest
+    ports:
+      - "3000:3000"
+    container_name: node-sensor-service
+
+  python-api:
+    image: timwillie73/python-sensor-service:latest
+    ports:
+      - "8000:8000"
+    container_name: python-sensor-service

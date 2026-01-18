@@ -62,6 +62,33 @@ The services use static in-memory sensor data representing various IoT sensor re
 ]
 ```
 
+## Docker Hub Images
+
+Both services are available as pre-built Docker images on Docker Hub for easy deployment:
+
+- **Node.js Service**: [`timwillie73/node-sensor-service:latest`](https://hub.docker.com/r/timwillie73/node-sensor-service)
+- **Python Service**: [`timwillie73/python-sensor-service:latest`](https://hub.docker.com/r/timwillie73/python-sensor-service)
+
+### Quick Start with Docker Hub Images
+
+You can run the services directly from Docker Hub without building locally:
+
+```bash
+# Pull and run Node.js service
+docker run -d -p 3000:3000 --name node-sensor-service timwillie73/node-sensor-service:latest
+
+# Pull and run Python service
+docker run -d -p 8000:8000 --name python-sensor-service timwillie73/python-sensor-service:latest
+```
+
+Or use the provided `docker-compose.hub.yml` file that uses pre-built images:
+
+```bash
+docker compose -f docker-compose.hub.yml up
+```
+
+This will automatically pull the images from Docker Hub if they're not already present locally.
+
 ## Getting Started
 
 ### Prerequisites
@@ -76,6 +103,22 @@ docker run hello-world
 ```
 
 ### Running the Services
+
+#### Option 1: Using Pre-built Docker Hub Images (Recommended for Grading)
+
+1. **Pull and run using Docker Compose:**
+   ```bash
+   docker compose pull
+   docker compose up
+   ```
+
+2. **Or pull images individually:**
+   ```bash
+   docker pull timwillie73/node-sensor-service:latest
+   docker pull timwillie73/python-sensor-service:latest
+   ```
+
+#### Option 2: Build from Source
 
 1. **Build and start all services:**
    ```bash
