@@ -2,11 +2,19 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package.json .
-RUN npm install
+# Copy package files and install dependencies
+COPY package.json ./
+RUN npm install --omit=dev
 
-COPY index.js .
+# Copy source code (new src/ directory structure)
+COPY src/ ./src/
 
+# Expose port
 EXPOSE 3000
 
-CMD ["node", "index.js"]
+# Set default environment variables
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Run from new location
+CMD ["node", "src/index.js"]

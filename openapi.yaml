@@ -1,0 +1,302 @@
+openapi: 3.0.3
+info:
+  title: Sensor Microservice API
+  description: |
+    IoT Smart Home Sensors microservice providing endpoints to manage sensor readings.
+    This service handles temperature, humidity, motion, pressure, and light sensor types
+    with proper validation, timestamps, and data persistence.
+  version: 2.0.0
+  contact:
+    name: Sensor Microservice API Support
+
+servers:
+  - url: http://localhost:3000
+    description: Node.js service (development)
+  - url: http://localhost:8000
+    description: Python service (development)
+
+tags:
+  - name: sensors
+    description: Sensor reading operations
+
+paths:
+  /sensors:
+    get:
+      summary: List all sensors
+      description: Retrieve a collection of all sensor readings with optional filtering and pagination
+      tags:
+        - sensors
+      parameters:
+        - name: type
+          in: query
+          description: Filter sensors by type
+          required: false
+          schema:
+            type: string
+            enum: [temperature, humidity, motion, pressure, light]
+          example: temperature
+        - name: limit
+          in: query
+          description: Maximum number of sensors to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+          example: 10
+        - name: offset
+          in: query
+          description: Number of sensors to skip for pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          example: 0
+      responses:
+        '200':
+          description: Successful response with sensor collection
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Sensor'
+                  count:
+                    type: integer
+                    description: Number of sensors returned
+              example:
+                data:
+                  - sensor_id: temp_living_room
+                    type: temperature
+                    value: 72.4
+                    unit: F
+                    timestamp: "2026-01-18T14:30:00Z"
+                  - sensor_id: humidity_basement
+                    type: humidity
+                    value: 45
+                    unit: "%"
+                    timestamp: "2026-01-18T14:30:00Z"
+                count: 2
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      summary: Create a new sensor reading
+      description: Create a new sensor reading with validation. Requires API key authentication.
+      tags:
+        - sensors
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SensorCreate'
+            examples:
+              temperature:
+                summary: Temperature sensor example
+                value:
+                  sensor_id: temp_kitchen
+                  type: temperature
+                  value: 68.5
+                  unit: F
+              humidity:
+                summary: Humidity sensor example
+                value:
+                  sensor_id: humidity_bedroom
+                  type: humidity
+                  value: 55
+                  unit: "%"
+              motion:
+                summary: Motion sensor example
+                value:
+                  sensor_id: motion_garage
+                  type: motion
+                  value: 1
+                  unit: boolean
+      responses:
+        '201':
+          description: Sensor created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sensor'
+              example:
+                sensor_id: temp_kitchen
+                type: temperature
+                value: 68.5
+                unit: F
+                timestamp: "2026-01-18T15:45:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Sensor with this ID already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Sensor already exists
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /sensors/{sensor_id}:
+    get:
+      summary: Get sensor by ID
+      description: Retrieve a specific sensor reading by its sensor_id
+      tags:
+        - sensors
+      parameters:
+        - name: sensor_id
+          in: path
+          required: true
+          description: Unique identifier for the sensor
+          schema:
+            type: string
+            pattern: '^[a-z0-9_]+$'
+          example: temp_living_room
+      responses:
+        '200':
+          description: Sensor found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sensor'
+              example:
+                sensor_id: temp_living_room
+                type: temperature
+                value: 72.4
+                unit: F
+                timestamp: "2026-01-18T14:30:00Z"
+        '404':
+          description: Sensor not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Sensor not found
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API-Key
+      description: API key authentication using Bearer token format
+
+  schemas:
+    Sensor:
+      type: object
+      required:
+        - sensor_id
+        - type
+        - value
+        - unit
+        - timestamp
+      properties:
+        sensor_id:
+          type: string
+          description: Unique identifier for the sensor
+          pattern: '^[a-z0-9_]+$'
+          example: temp_living_room
+        type:
+          type: string
+          enum: [temperature, humidity, motion, pressure, light]
+          description: Type of sensor
+          example: temperature
+        value:
+          type: number
+          description: Sensor reading value
+          example: 72.4
+        unit:
+          type: string
+          description: Unit of measurement for the value
+          example: F
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp of the reading
+          example: "2026-01-18T14:30:00Z"
+
+    SensorCreate:
+      type: object
+      required:
+        - sensor_id
+        - type
+        - value
+        - unit
+      properties:
+        sensor_id:
+          type: string
+          description: Unique identifier for the sensor
+          pattern: '^[a-z0-9_]+$'
+          minLength: 1
+          maxLength: 100
+          example: temp_kitchen
+        type:
+          type: string
+          enum: [temperature, humidity, motion, pressure, light]
+          description: Type of sensor
+          example: temperature
+        value:
+          type: number
+          description: Sensor reading value. Range validation depends on type.
+          example: 68.5
+        unit:
+          type: string
+          description: Unit of measurement. Must match sensor type.
+          example: F
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp. Optional - auto-generated if not provided.
+          example: "2026-01-18T15:45:00Z"
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: Invalid request
+
+  responses:
+    BadRequest:
+      description: Invalid request data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Validation failed - sensor_id is required
+
+    Unauthorized:
+      description: Authentication required or invalid API key
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Unauthorized - Invalid or missing API key
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Internal server error

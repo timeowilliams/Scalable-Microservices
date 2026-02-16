@@ -5,10 +5,20 @@ services:
     build: ./node-service
     ports:
       - "3000:3000"
+    environment:
+      - PORT=3000
+      - API_KEY=${API_KEY:-default-api-key-change-me}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - NODE_ENV=production
     container_name: node-sensor-service
 
   python-api:
     build: ./python-service
     ports:
       - "8000:8000"
+    environment:
+      - PORT=8000
+      - API_KEY=${API_KEY:-default-api-key-change-me}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - PYTHON_ENV=production
     container_name: python-sensor-service
