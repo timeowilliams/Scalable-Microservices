@@ -1,4 +1,4 @@
-# Assignment 2: Enhanced Sensor Microservice
+# Assignment 1: Enhanced Sensor Microservice
 
 ## Service Definition
 
@@ -6,7 +6,7 @@ The Sensor microservice manages IoT sensor readings for a smart home system. It 
 
 ## API Specification
 
-The complete OpenAPI 3.0 specification is available at: [openapi.yaml](../openapi.yaml)
+The complete OpenAPI 3.0 specification is available at: [api_spec.yaml](api_spec.yaml)
 
 ### Endpoints
 
@@ -24,7 +24,7 @@ Authorization: Bearer <your-api-key>
 
 ## Architecture Diagram
 
-![Architecture Diagram](../architecture-diagram.svg)
+![Architecture Diagram](architecture.png)
 
 The architecture shows:
 - **Client Application**: External client making HTTP/REST requests
@@ -307,118 +307,7 @@ class Config:
 
 ## Running the Services
 
-### Prerequisites
-
-- Docker and Docker Compose installed
-- Node.js 20+ (for local development)
-- Python 3.11+ (for local development)
-
-### Using Docker Compose (Recommended)
-
-1. **Set environment variables** (optional, defaults provided):
-   ```bash
-   export API_KEY=your-secure-api-key-here
-   export LOG_LEVEL=info
-   ```
-
-2. **Build and start services:**
-   ```bash
-   docker compose up --build
-   ```
-
-3. **Run in detached mode:**
-   ```bash
-   docker compose up -d --build
-   ```
-
-4. **View logs:**
-   ```bash
-   docker compose logs -f
-   ```
-
-5. **Stop services:**
-   ```bash
-   docker compose down
-   ```
-
-### Running Locally (Development)
-
-#### Node.js Service
-
-1. **Install dependencies:**
-   ```bash
-   cd node-service
-   npm install
-   ```
-
-2. **Set environment variables:**
-   ```bash
-   export PORT=3000
-   export API_KEY=test-api-key-123
-   export LOG_LEVEL=info
-   ```
-
-3. **Start service:**
-   ```bash
-   npm start
-   ```
-
-4. **Run tests:**
-   ```bash
-   npm test
-   ```
-
-#### Python Service
-
-1. **Install dependencies:**
-   ```bash
-   cd python-service
-   pip install -r requirements.txt
-   ```
-
-2. **Set environment variables:**
-   ```bash
-   export PORT=8000
-   export API_KEY=test-api-key-123
-   export LOG_LEVEL=info
-   ```
-
-3. **Start service:**
-   ```bash
-   cd src
-   uvicorn app:app --host 0.0.0.0 --port 8000
-   ```
-
-4. **Run tests:**
-   ```bash
-   pytest tests/
-   ```
-
-### Using Docker Hub Images
-
-1. **Pull and run using docker-compose:**
-   ```bash
-   docker compose -f docker-compose.hub.yml up
-   ```
-
-2. **Or pull images individually:**
-   ```bash
-   docker pull timwillie73/node-sensor-service:v2
-   docker pull timwillie73/python-sensor-service:v2
-   ```
-
-3. **Run containers:**
-   ```bash
-   docker run -d -p 3000:3000 \
-     -e API_KEY=your-api-key \
-     --name node-sensor-service \
-     timwillie73/node-sensor-service:v2
-
-   docker run -d -p 8000:8000 \
-     -e API_KEY=your-api-key \
-     --name python-sensor-service \
-     timwillie73/python-sensor-service:v2
-   ```
+For detailed run instructions, see [RUN.md](RUN.md).
 
 ## Testing
 
@@ -448,10 +337,11 @@ Tests cover the same scenarios as Node.js tests.
 
 ```
 .
-├── A2/
-│   └── README.md              # This file
-├── openapi.yaml               # OpenAPI 3.0 specification
-├── architecture-diagram.svg   # Architecture visualization
+├── A1/
+│   ├── README.md              # This file
+│   ├── RUN.md                 # Run instructions
+│   ├── api_spec.yaml          # OpenAPI 3.0 specification
+│   └── architecture.png       # Architecture visualization
 ├── node-service/
 │   ├── src/
 │   │   ├── index.js          # Entry point
