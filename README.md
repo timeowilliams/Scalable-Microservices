@@ -1,246 +1,106 @@
-# Scalable Microservices - Assignment 0
+# Scalable Microservices
 
 ## Project Overview
 
-This project implements two parallel microservices for an **IoT Smart Home Sensors** domain, built with Node.js (Express) and Python (FastAPI). Both services provide identical functionality for sensor data retrieval and health monitoring.
+This repository contains a series of assignments exploring scalable microservices architecture using an **IoT Smart Home Sensors** domain. The project implements parallel microservices in Node.js (Express) and Python (FastAPI) to compare different approaches to building asynchronous, distributed systems.
 
 ## Domain Selection
 
-I chose the **IoT Smart Home Sensors** domain because it is naturally decomposable into microservices, emphasizes data ingestion and retrieval, and scales cleanly into more advanced distributed systems patterns later in the semester. The domain is naturally event-driven, making it ideal for microservices architecture, while remaining data-centric and simple enough to avoid UI/state complexity early in the course.
+I chose the **IoT Smart Home Sensors** domain because it is naturally decomposable into microservices, emphasizes data ingestion and retrieval, and scales cleanly into more advanced distributed systems patterns. The domain is naturally event-driven, making it ideal for microservices architecture, while remaining data-centric and simple enough to avoid UI/state complexity early in the course.
+
+This domain is also relevant to my work for the Army/soldiers operating in the field and relying on sensor technology to fight in the battlefield. It provides a practical foundation that connects to real-world applications where sensor data collection, processing, and distribution are critical for operational success.
 
 ## Technology Stack
 
-I selected **Node.js** and **Python (FastAPI)** to compare two popular, production-grade approaches to building asynchronous microservices, each with different concurrency and ecosystem tradeoffs.
+The project uses **Node.js** and **Python (FastAPI)** to compare two popular, production-grade approaches to building asynchronous microservices, each with different concurrency and ecosystem tradeoffs.
 
-### Versions
+- **Node.js**: Event-driven, non-blocking I/O
+- **Python (FastAPI)**: Async/await support with automatic API documentation
+- **Docker**: Containerization for consistent deployment
+- **Docker Compose**: Multi-container orchestration
 
-- **Node.js**: v20.x
-- **Express**: v4.18.2
-- **Python**: 3.11.x
-- **FastAPI**: 0.109.0
-- **Uvicorn**: 0.27.0
-- **Docker**: 25.x
-- **Docker Compose**: v2.x
+## Assignments
 
-## Architecture
+This repository is organized by assignment, with each assignment building upon previous work:
 
-Both services implement identical API endpoints:
+### [Assignment 0: Initial Microservices Setup](A0/)
 
-- **`GET /health`** - Returns service health status
-- **`GET /sensors`** - Returns a JSON array of sensor readings
+Initial implementation of two parallel microservices (Node.js and Python) providing basic sensor data retrieval and health monitoring endpoints. This assignment establishes the foundation with Docker containerization and demonstrates the core differences between Express and FastAPI implementations.
 
-### Service Endpoints
+**Key Features:**
+- Basic REST API endpoints (`/health`, `/sensors`)
+- Docker containerization
+- Docker Hub image distribution
+- Parallel implementation in Node.js and Python
 
-#### Node.js Service (Port 3000)
-- `http://localhost:3000/health`
-- `http://localhost:3000/sensors`
+### [Assignment 1: Enhanced Sensor Microservice](A1/)
 
-#### Python Service (Port 8000)
-- `http://localhost:8000/health`
-- `http://localhost:8000/health` (FastAPI also provides `/docs` for interactive API documentation)
+Enhanced sensor microservice with dependency injection, input validation, API key authentication, structured logging, and comprehensive testing. Demonstrates framework-specific patterns for DI, configuration management, and security.
 
-## Dataset
+**Key Features:**
+- Dependency injection (manual in Node.js, built-in in FastAPI)
+- API key authentication
+- Input validation and error handling
+- Structured logging with correlation IDs
+- OpenAPI 3.0 specification
+- Comprehensive integration tests
 
-The services use static in-memory sensor data representing various IoT sensor readings:
+### Assignment 2: [To be added]
 
-```json
-[
-  {
-    "sensor_id": "temp_living_room",
-    "type": "temperature",
-    "value": 72.4,
-    "unit": "F",
-    "timestamp": "2026-01-18T14:30:00Z"
-  },
-  {
-    "sensor_id": "humidity_basement",
-    "type": "humidity",
-    "value": 45,
-    "unit": "%",
-    "timestamp": "2026-01-18T14:30:00Z"
-  }
-]
-```
-
-## Docker Hub Images
-
-Both services are available as pre-built Docker images on Docker Hub for easy deployment:
-
-- **Node.js Service**: [`timwillie73/node-sensor-service:latest`](https://hub.docker.com/r/timwillie73/node-sensor-service)
-- **Python Service**: [`timwillie73/python-sensor-service:latest`](https://hub.docker.com/r/timwillie73/python-sensor-service)
-
-### Quick Start with Docker Hub Images
-
-You can run the services directly from Docker Hub without building locally:
-
-```bash
-# Pull and run Node.js service
-docker run -d -p 3000:3000 --name node-sensor-service timwillie73/node-sensor-service:latest
-
-# Pull and run Python service
-docker run -d -p 8000:8000 --name python-sensor-service timwillie73/python-sensor-service:latest
-```
-
-Or use the provided `docker-compose.hub.yml` file that uses pre-built images:
-
-```bash
-docker compose -f docker-compose.hub.yml up
-```
-
-This will automatically pull the images from Docker Hub if they're not already present locally.
-
-## Getting Started
-
-### Prerequisites
-
-- Docker (v25.x or later)
-- Docker Compose (v2.x or later)
-
-### Verify Docker Installation
-
-```bash
-docker run hello-world
-```
-
-### Running the Services
-
-#### Option 1: Using Pre-built Docker Hub Images (Recommended for Grading)
-
-1. **Pull and run using Docker Compose:**
-   ```bash
-   docker compose pull
-   docker compose up
-   ```
-
-2. **Or pull images individually:**
-   ```bash
-   docker pull timwillie73/node-sensor-service:latest
-   docker pull timwillie73/python-sensor-service:latest
-   ```
-
-#### Option 2: Build from Source
-
-1. **Build and start all services:**
-   ```bash
-   docker compose up --build
-   ```
-
-2. **Run in detached mode:**
-   ```bash
-   docker compose up -d --build
-   ```
-
-3. **View logs:**
-   ```bash
-   docker compose logs -f
-   ```
-
-4. **Stop services:**
-   ```bash
-   docker compose down
-   ```
-
-### Testing the Services
-
-#### Health Checks
-
-```bash
-# Node.js service
-curl http://localhost:3000/health
-
-# Python service
-curl http://localhost:8000/health
-```
-
-Expected responses:
-```json
-{"status":"ok","service":"node"}
-{"status":"ok","service":"python"}
-```
-
-#### Sensor Data
-
-```bash
-# Node.js service
-curl http://localhost:3000/sensors
-
-# Python service
-curl http://localhost:8000/sensors
-```
-
-#### Interactive API Documentation (FastAPI)
-
-Visit `http://localhost:8000/docs` in your browser for FastAPI's automatic interactive API documentation.
-
-### Testing Docker Hub Images
-
-To verify the Docker Hub images work correctly, you can use the provided test script:
-
-```bash
-./test-dockerhub.sh
-```
-
-This script will:
-1. Pull the latest images from Docker Hub
-2. Start both services
-3. Test the `/health` and `/sensors` endpoints for both services
-4. Display formatted JSON responses
-
-Alternatively, you can manually test:
-
-```bash
-# Pull images
-docker pull timwillie73/node-sensor-service:latest
-docker pull timwillie73/python-sensor-service:latest
-
-# Start services
-docker run -d -p 3000:3000 --name node-sensor-service timwillie73/node-sensor-service:latest
-docker run -d -p 8000:8000 --name python-sensor-service timwillie73/python-sensor-service:latest
-
-# Wait a few seconds for services to start, then test
-curl http://localhost:3000/health
-curl http://localhost:3000/sensors
-curl http://localhost:8000/health
-curl http://localhost:8000/sensors
-```
+### Assignment 3: [To be added]
 
 ## Project Structure
 
 ```
 .
-├── node-service/
-│   ├── Dockerfile
-│   ├── package.json
-│   └── index.js
-├── python-service/
-│   ├── Dockerfile
-│   ├── requirements.txt
-│   └── main.py
-├── docker-compose.yml
-├── docker-compose.hub.yml
-├── test-dockerhub.sh
-└── README.md
+├── A0/                      # Assignment 0: Initial Microservices Setup
+│   ├── node-service/        # Simple Node.js service (basic endpoints)
+│   ├── python-service/      # Simple Python service (basic endpoints)
+│   ├── docker-compose.yml
+│   ├── docker-compose.hub.yml
+│   ├── README.md
+│   ├── health_ping.png
+│   └── sensors_ping.png
+├── A1/                      # Assignment 1: Enhanced Sensor Microservice
+│   ├── node-service/        # Enhanced Node.js service (DI, auth, validation)
+│   ├── python-service/      # Enhanced Python service (DI, auth, validation)
+│   ├── docker-compose.yml
+│   ├── docker-compose.hub.yml
+│   ├── README.md
+│   ├── RUN.md
+│   ├── api_spec.yaml
+│   └── architecture.png
+├── A2/                      # Assignment 2: [To be added]
+├── A3/                      # Assignment 3: [To be added]
+└── README.md                # This file
 ```
 
-## Reflection
+## Getting Started
 
-I chose the smart IoT domain because I find external sensor data relevant to my work for the Army/soldiers operating in the field and relying on sensor technology to fight in the battlefield. This domain provides a practical foundation that connects to real-world applications where sensor data collection, processing, and distribution are critical for operational success.
+Each assignment has its own detailed README with specific setup and running instructions:
 
-For the two languages, I primarily use JavaScript/Node for frontend technologies and Python for data science tasks. It would be cool to compare both of them and optimize future microservices written in these languages. This project allows me to evaluate the performance, development experience, and ecosystem differences between Node.js and Python (FastAPI) in a microservices context, which will inform future architectural decisions.
+- [Assignment 0 Setup](A0/README.md#getting-started)
+- [Assignment 1 Setup](A1/README.md#running-the-services)
 
-Everything worked smoothly during implementation - nothing confused me. The Docker containerization process was straightforward, and both services deployed without issues. The parallel implementation in both languages provided valuable insights into the tradeoffs between event-driven Node.js and async Python frameworks.
+Each assignment contains its own isolated service /foimplementations, allowing you to:
+- Run services independently for each assignment
+- Compare implementations across assignments
+- Build upon previous work without affecting earlier assignments
 
+### General Prerequisites
 
-## Screenshots
+- Docker (v25.x or later)
+- Docker Compose (v2.x or later)
+- Node.js v20.x (for local development)
+- Python 3.11.x (for local development)
 
-### Health Endpoint Test
+## Development Philosophy
 
-![Health Endpoint Test](health_ping.png)
+This project explores the tradeoffs between different microservices frameworks and patterns:
 
-*API client test showing successful GET request to `localhost:3000/health` (Node.js service). Response: `200 OK` in 38ms, returning `{"status": "ok", "service": "node"}`.*
+- **Explicit vs. Declarative**: Node.js/Express requires explicit dependency wiring, while FastAPI provides declarative dependency injection
+- **Validation**: Manual validation in Node.js vs. automatic Pydantic validation in Python
+- **Developer Experience**: More boilerplate in Node.js vs. less code and automatic documentation in FastAPI
+- **Performance**: Event-driven Node.js vs. async/await Python with Uvicorn
 
-### Sensors Endpoint Test
-
-![Sensors Endpoint Test](sensors_ping.png)
-
-*API client test showing successful GET request to `localhost:8000/sensors` (Python service). Response: `200 OK` in 47ms, returning an array of sensor readings including temperature (temp_living_room, temp_bedroom), humidity (humidity_basement, humidity_living_room), and motion (motion_kitchen) sensors with timestamps.*
+Each assignment builds upon these foundations to explore more advanced distributed systems concepts.

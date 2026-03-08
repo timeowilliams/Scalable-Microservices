@@ -1,0 +1,50 @@
+version: "3.9"
+
+services:
+  node-api:
+    build: ./node-service
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - API_KEY=${API_KEY:-default-api-key-change-me}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - NODE_ENV=production
+    container_name: node-sensor-service-a1
+
+  python-api:
+    build: ./python-service
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - API_KEY=${API_KEY:-default-api-key-change-me}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - PYTHON_ENV=production
+    container_name: python-sensor-service-a1
+
+  node-test:
+    build:
+      context: ./node-service
+      dockerfile: Dockerfile.test
+      args:
+        DOCKER_BUILDKIT: 1
+    environment:
+      - NODE_ENV=test
+      - API_KEY=test-api-key-123
+    container_name: node-sensor-test-a1
+    profiles:
+      - test
+
+  python-test:
+    build:
+      context: ./python-service
+      dockerfile: Dockerfile.test
+      args:
+        DOCKER_BUILDKIT: 1
+    environment:
+      - PYTHON_ENV=test
+      - API_KEY=test-api-key-123
+    container_name: python-sensor-test-a1
+    profiles:
+      - test

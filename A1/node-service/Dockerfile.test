@@ -1,0 +1,23 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files and install ALL dependencies (including dev)
+COPY package.json ./
+RUN npm install
+
+# Copy source code
+COPY src/ ./src/
+
+# Copy jest config
+COPY jest.config.js ./
+
+# Copy tests directory
+COPY tests/ ./tests/
+
+# Set default environment variables
+ENV NODE_ENV=test
+ENV PORT=3000
+
+# Run tests
+CMD ["npm", "test"]

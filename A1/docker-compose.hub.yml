@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   node-api:
-    build: ./node-service
+    image: timwillie73/node-sensor-service:v2
     ports:
       - "3000:3000"
     environment:
@@ -10,10 +10,10 @@ services:
       - API_KEY=${API_KEY:-default-api-key-change-me}
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - NODE_ENV=production
-    container_name: node-sensor-service
+    container_name: node-sensor-service-a1
 
   python-api:
-    build: ./python-service
+    image: timwillie73/python-sensor-service:v2
     ports:
       - "8000:8000"
     environment:
@@ -21,4 +21,4 @@ services:
       - API_KEY=${API_KEY:-default-api-key-change-me}
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - PYTHON_ENV=production
-    container_name: python-sensor-service
+    container_name: python-sensor-service-a1

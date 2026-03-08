@@ -1,0 +1,20 @@
+version: "3.9"
+
+services:
+  node-api:
+    build: ./node-service
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+    container_name: node-sensor-service-a0
+
+  python-api:
+    build: ./python-service
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - PYTHON_ENV=production
+    container_name: python-sensor-service-a0
