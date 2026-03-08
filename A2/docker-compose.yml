@@ -1,0 +1,226 @@
+services:
+  # PostgreSQL Databases
+  node-sensor-db:
+    image: postgres:15-alpine
+    container_name: node-sensor-db-a2
+    environment:
+      POSTGRES_DB: node_sensor_db
+      POSTGRES_USER: sensor_user
+      POSTGRES_PASSWORD: sensor_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - node-sensor-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sensor_user -d node_sensor_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  python-sensor-db:
+    image: postgres:15-alpine
+    container_name: python-sensor-db-a2
+    environment:
+      POSTGRES_DB: python_sensor_db
+      POSTGRES_USER: sensor_user
+      POSTGRES_PASSWORD: sensor_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - python-sensor-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sensor_user -d python_sensor_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  node-command-db:
+    image: postgres:15-alpine
+    container_name: node-command-db-a2
+    environment:
+      POSTGRES_DB: node_command_db
+      POSTGRES_USER: command_user
+      POSTGRES_PASSWORD: command_pass
+    ports:
+      - "5434:5432"
+    volumes:
+      - node-command-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U command_user -d node_command_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  python-command-db:
+    image: postgres:15-alpine
+    container_name: python-command-db-a2
+    environment:
+      POSTGRES_DB: python_command_db
+      POSTGRES_USER: command_user
+      POSTGRES_PASSWORD: command_pass
+    ports:
+      - "5435:5432"
+    volumes:
+      - python-command-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U command_user -d python_command_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq-a2
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Sensor Services
+  node-sensor-service:
+    build: ./node-service
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - API_KEY=${API_KEY:-default-api-key-change-me}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - NODE_ENV=production
+      - DB_HOST=node-sensor-db
+      - DB_PORT=5432
+      - DB_NAME=node_sensor_db
+      - DB_USER=sensor_user
+      - DB_PASSWORD=sensor_pass
+      - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
+      - WORKERS=${WORKERS:-2}
+    depends_on:
+      node-sensor-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    container_name: node-sensor-service-a2
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  python-sensor-service:
+    build: ./python-service
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - API_KEY=${API_KEY:-default-api-key-change-me}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - PYTHON_ENV=production
+      - DB_HOST=python-sensor-db
+      - DB_PORT=5432
+      - DB_NAME=python_sensor_db
+      - DB_USER=sensor_user
+      - DB_PASSWORD=sensor_pass
+      - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
+      - WORKERS=2
+    depends_on:
+      python-sensor-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    container_name: python-sensor-service-a2
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # Command & Control Services
+  node-command-service:
+    build: ./command-node-service
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - API_KEY=${API_KEY:-default-api-key-change-me}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - NODE_ENV=production
+      - DB_HOST=node-command-db
+      - DB_PORT=5432
+      - DB_NAME=node_command_db
+      - DB_USER=command_user
+      - DB_PASSWORD=command_pass
+      - SENSOR_SERVICE_URL=http://node-sensor-service:3000
+      - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
+      - WORKERS=${WORKERS:-2}
+    depends_on:
+      node-command-db:
+        condition: service_healthy
+      node-sensor-service:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    container_name: node-command-service-a2
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  python-command-service:
+    build: ./command-python-service
+    ports:
+      - "8001:8001"
+    environment:
+      - PORT=8001
+      - API_KEY=${API_KEY:-default-api-key-change-me}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - PYTHON_ENV=production
+      - DB_HOST=python-command-db
+      - DB_PORT=5432
+      - DB_NAME=python_command_db
+      - DB_USER=command_user
+      - DB_PASSWORD=command_pass
+      - SENSOR_SERVICE_URL=http://python-sensor-service:8000
+      - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
+      - WORKERS=2
+    depends_on:
+      python-command-db:
+        condition: service_healthy
+      python-sensor-service:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    container_name: python-command-service-a2
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+volumes:
+  node-sensor-db-data:
+  python-sensor-db-data:
+  node-command-db-data:
+  python-command-db-data:
+  rabbitmq-data:
