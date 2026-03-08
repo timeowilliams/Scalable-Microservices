@@ -16,6 +16,8 @@ The project uses **Node.js** and **Python (FastAPI)** to compare two popular, pr
 
 - **Node.js**: Event-driven, non-blocking I/O
 - **Python (FastAPI)**: Async/await support with automatic API documentation
+- **PostgreSQL**: Relational database (introduced in A2)
+- **RabbitMQ**: Message broker for event-driven communication (introduced in A2)
 - **Docker**: Containerization for consistent deployment
 - **Docker Compose**: Multi-container orchestration
 
@@ -45,7 +47,17 @@ Enhanced sensor microservice with dependency injection, input validation, API ke
 - OpenAPI 3.0 specification
 - Comprehensive integration tests
 
-### Assignment 2: [To be added]
+### [Assignment 2: Database Per Service + Command & Control](A2/)
+
+Implements the database per service pattern with separate PostgreSQL databases for each microservice, adds a Command & Control service for tactical operations, integrates RabbitMQ for event-driven communication, and implements resilience patterns (bulkheads, circuit breakers, rate limiting).
+
+**Key Features:**
+- Database per service pattern (4 PostgreSQL databases)
+- Command & Control service for tactical dashboards and alert management
+- RabbitMQ event bus for asynchronous communication
+- Resilience patterns (circuit breakers, rate limiting, bulkheads)
+- Inter-service communication (HTTP/REST + RabbitMQ events)
+- Docker resource limits for service isolation
 
 ### Assignment 3: [To be added]
 
@@ -67,10 +79,15 @@ Enhanced sensor microservice with dependency injection, input validation, API ke
 │   ├── docker-compose.yml
 │   ├── docker-compose.hub.yml
 │   ├── README.md
-│   ├── RUN.md
 │   ├── api_spec.yaml
 │   └── architecture.png
-├── A2/                      # Assignment 2: [To be added]
+├── A2/                      # Assignment 2: Database Per Service + Command & Control
+│   ├── node-service/        # Node.js sensor service with PostgreSQL
+│   ├── python-service/      # Python sensor service with PostgreSQL
+│   ├── command-node-service/ # Node.js command & control service
+│   ├── command-python-service/ # Python command & control service
+│   ├── docker-compose.yml   # Includes PostgreSQL, RabbitMQ, all services
+│   └── README.md
 ├── A3/                      # Assignment 3: [To be added]
 └── README.md                # This file
 ```
@@ -81,8 +98,9 @@ Each assignment has its own detailed README with specific setup and running inst
 
 - [Assignment 0 Setup](A0/README.md#getting-started)
 - [Assignment 1 Setup](A1/README.md#running-the-services)
+- [Assignment 2 Setup](A2/README.md)
 
-Each assignment contains its own isolated service /foimplementations, allowing you to:
+Each assignment contains its own isolated service implementations, allowing you to:
 - Run services independently for each assignment
 - Compare implementations across assignments
 - Build upon previous work without affecting earlier assignments
