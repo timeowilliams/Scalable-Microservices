@@ -8,7 +8,7 @@ router = APIRouter()
 
 @router.get("/dashboards")
 async def get_all_dashboards(
-    request,
+    request: Request,
     controller: CommandController = Depends(get_command_controller)
 ):
     return await controller.get_all_dashboards(request)
@@ -16,7 +16,7 @@ async def get_all_dashboards(
 
 @router.get("/dashboards/{dashboard_id}")
 async def get_dashboard_by_id(
-    request,
+    request: Request,
     dashboard_id: str,
     controller: CommandController = Depends(get_command_controller)
 ):
@@ -25,7 +25,7 @@ async def get_dashboard_by_id(
 
 @router.post("/dashboards")
 async def create_dashboard(
-    request,
+    request: Request,
     dashboard_data: dict = Body(...),
     controller: CommandController = Depends(get_command_controller),
     _: str = Depends(verify_api_key)
@@ -35,7 +35,7 @@ async def create_dashboard(
 
 @router.get("/alerts")
 async def get_all_alerts(
-    request,
+    request: Request,
     acknowledged: bool = None,
     severity: str = None,
     limit: int = None,
@@ -47,7 +47,7 @@ async def get_all_alerts(
 
 @router.post("/alerts")
 async def create_alert(
-    request,
+    request: Request,
     alert_data: dict = Body(...),
     controller: CommandController = Depends(get_command_controller),
     _: str = Depends(verify_api_key)
@@ -57,7 +57,7 @@ async def create_alert(
 
 @router.patch("/alerts/{alert_id}/acknowledge")
 async def acknowledge_alert(
-    request,
+    request: Request,
     alert_id: str,
     controller: CommandController = Depends(get_command_controller),
     _: str = Depends(verify_api_key)
@@ -68,7 +68,7 @@ async def acknowledge_alert(
 # Async endpoints
 @router.post("/sensor-aggregate")
 async def aggregate_sensors(
-    request,
+    request: Request,
     sensor_ids: dict = Body(...),
     controller: CommandController = Depends(get_command_controller),
     _: str = Depends(verify_api_key)
@@ -78,7 +78,7 @@ async def aggregate_sensors(
 
 @router.post("/mission-plan")
 async def create_mission_plan(
-    request,
+    request: Request,
     mission_data: dict = Body(...),
     controller: CommandController = Depends(get_command_controller),
     _: str = Depends(verify_api_key)
@@ -88,7 +88,7 @@ async def create_mission_plan(
 
 @router.post("/threat-assessment")
 async def assess_threats(
-    request,
+    request: Request,
     sensor_ids: dict = Body(...),
     controller: CommandController = Depends(get_command_controller),
     _: str = Depends(verify_api_key)

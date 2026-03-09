@@ -9,6 +9,7 @@ const correlationIdMiddleware = require('./middleware/correlationId');
 const authMiddleware = require('./middleware/auth');
 const validateSensorCreate = require('./validators/sensorValidator');
 const { getPool, initializeDatabase } = require('./db/connection');
+const SensorEventPublisher = require('./events/sensorEventPublisher');
 
 function createApp() {
   const app = express();

@@ -1,3 +1,12 @@
+-- Create function to update updated_at timestamp (if not exists)
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
 -- Create tactical_dashboards table
 CREATE TABLE IF NOT EXISTS tactical_dashboards (
     dashboard_id VARCHAR(100) PRIMARY KEY,

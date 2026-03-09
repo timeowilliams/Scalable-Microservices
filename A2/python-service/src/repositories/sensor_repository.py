@@ -1,4 +1,5 @@
 from typing import Dict, List, Optional, Any
+from datetime import datetime
 
 
 class SensorRepository:
@@ -39,6 +40,18 @@ class SensorRepository:
 
     async def create(self, sensor_data: Dict[str, Any]) -> Dict[str, Any]:
         async with self._pool.acquire() as conn:
+            # Convert timestamp string to datetime if needed
+            timestamp = sensor_data['timestamp']
+            if isinstance(timestamp, str):
+                # Parse ISO format timestamp
+                if timestamp.endswith('Z'):
+                    timestamp = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                else:
+                    timestamp = datetime.fromisoformat(timestamp)
+                # Convert to UTC and make timezone-naive for PostgreSQL
+                if timestamp.tzinfo is not None:
+                    timestamp = timestamp.astimezone().replace(tzinfo=None)
+            
             row = await conn.fetchrow(
                 '''INSERT INTO sensors (sensor_id, type, value, unit, timestamp)
                    VALUES ($1, $2, $3, $4, $5)
@@ -47,7 +60,7 @@ class SensorRepository:
                 sensor_data['type'],
                 sensor_data['value'],
                 sensor_data['unit'],
-                sensor_data['timestamp']
+                timestamp
             )
             
             return {

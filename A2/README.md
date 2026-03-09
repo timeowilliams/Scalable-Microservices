@@ -19,6 +19,164 @@ This assignment implements the **database per service** pattern with separate Po
 - **RabbitMQ**: Event bus for asynchronous event-driven communication
 - **Docker Resource Limits**: CPU and memory limits per service for isolation
 
+## Architecture Diagrams
+
+### 1. System Architecture Diagram
+
+This diagram shows the overall system architecture with all services, databases, and communication patterns:
+
+```mermaid
+graph TB
+    subgraph ClientLayer[Client Layer]
+        Client[Client Application]
+    end
+
+    subgraph ServiceLayer[Service Layer]
+        subgraph SensorServices[Sensor Services]
+            NodeSensor[Node.js Sensor Service<br/>Port: 3000]
+            PythonSensor[Python Sensor Service<br/>Port: 8000]
+        end
+        
+        subgraph CommandServices[Command & Control Services]
+            NodeCommand[Node.js Command Service<br/>Port: 3001]
+            PythonCommand[Python Command Service<br/>Port: 8001]
+        end
+    end
+
+    subgraph DataLayer[Data Layer - Database Per Service]
+        NodeSensorDB[(node_sensor_db<br/>PostgreSQL)]
+        PythonSensorDB[(python_sensor_db<br/>PostgreSQL)]
+        NodeCommandDB[(node_command_db<br/>PostgreSQL)]
+        PythonCommandDB[(python_command_db<br/>PostgreSQL)]
+    end
+
+    subgraph EventLayer[Event Bus]
+        RabbitMQ[RabbitMQ<br/>Port: 5672<br/>Management: 15672]
+    end
+
+    Client -->|HTTP/REST| NodeSensor
+    Client -->|HTTP/REST| PythonSensor
+    Client -->|HTTP/REST| NodeCommand
+    Client -->|HTTP/REST| PythonCommand
+
+    NodeSensor -->|Read/Write| NodeSensorDB
+    PythonSensor -->|Read/Write| PythonSensorDB
+    NodeCommand -->|Read/Write| NodeCommandDB
+    PythonCommand -->|Read/Write| PythonCommandDB
+
+    NodeCommand -->|HTTP Sync| NodeSensor
+    NodeCommand -->|HTTP Sync| PythonSensor
+    PythonCommand -->|HTTP Sync| NodeSensor
+    PythonCommand -->|HTTP Sync| PythonSensor
+
+    NodeSensor -->|Publish Events| RabbitMQ
+    PythonSensor -->|Publish Events| RabbitMQ
+    NodeCommand -->|Publish Events| RabbitMQ
+    PythonCommand -->|Publish Events| RabbitMQ
+
+    RabbitMQ -->|Subscribe| NodeCommand
+    RabbitMQ -->|Subscribe| PythonCommand
+
+    style NodeSensor fill:#e1f5ff
+    style PythonSensor fill:#e1f5ff
+    style NodeCommand fill:#fff4e1
+    style PythonCommand fill:#fff4e1
+    style RabbitMQ fill:#ffe1f5
+    style NodeSensorDB fill:#e1ffe1
+    style PythonSensorDB fill:#e1ffe1
+    style NodeCommandDB fill:#e1ffe1
+    style PythonCommandDB fill:#e1ffe1
+```
+
+### 2. Sequence Diagram: Sensor Creation with Event-Driven Updates
+
+This sequence diagram illustrates the flow when a sensor is created, showing both synchronous HTTP communication and asynchronous event-driven updates:
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant SensorService as Sensor Service<br/>(Node.js/Python)
+    participant SensorDB as Sensor Database<br/>(PostgreSQL)
+    participant RabbitMQ as RabbitMQ<br/>Event Bus
+    participant CommandService as Command Service<br/>(Node.js/Python)
+    participant CommandDB as Command Database<br/>(PostgreSQL)
+
+    Client->>SensorService: POST /sensors<br/>(with API key)
+    SensorService->>SensorService: Validate API key
+    SensorService->>SensorService: Validate sensor data
+    SensorService->>SensorDB: INSERT sensor
+    SensorDB-->>SensorService: Sensor created
+    SensorService->>RabbitMQ: Publish sensor.created event
+    SensorService-->>Client: 201 Created<br/>(sensor data)
+
+    Note over RabbitMQ: Event routing to subscribers
+
+    RabbitMQ->>CommandService: Deliver sensor.created event
+    CommandService->>CommandService: Process event
+    CommandService->>CommandDB: Update dashboard<br/>(sensor summary)
+    CommandService->>CommandDB: Create alert if needed
+    CommandDB-->>CommandService: Updates saved
+
+    Note over Client,CommandDB: Async event processing<br/>happens independently
+```
+
+### 3. Deployment Diagram: Docker Container Architecture
+
+This diagram shows the deployment architecture with Docker containers, ports, resource limits, and network topology:
+
+```mermaid
+graph TB
+    subgraph DockerHost[Docker Host]
+        subgraph Network[a2_default Network]
+            subgraph SensorContainers[Sensor Service Containers]
+                NodeSensorContainer[Node Sensor Service<br/>Container: node-sensor-service-a2<br/>Port: 3000:3000<br/>CPU: 0.5 / Memory: 512MB]
+                PythonSensorContainer[Python Sensor Service<br/>Container: python-sensor-service-a2<br/>Port: 8000:8000<br/>CPU: 0.5 / Memory: 512MB]
+            end
+
+            subgraph CommandContainers[Command Service Containers]
+                NodeCommandContainer[Node Command Service<br/>Container: node-command-service-a2<br/>Port: 3001:3001<br/>CPU: 1.0 / Memory: 1GB]
+                PythonCommandContainer[Python Command Service<br/>Container: python-command-service-a2<br/>Port: 8001:8001<br/>CPU: 1.0 / Memory: 1GB]
+            end
+
+            subgraph DatabaseContainers[Database Containers]
+                NodeSensorDBContainer[(node-sensor-db-a2<br/>PostgreSQL 15<br/>Port: 5432:5432)]
+                PythonSensorDBContainer[(python-sensor-db-a2<br/>PostgreSQL 15<br/>Port: 5433:5432)]
+                NodeCommandDBContainer[(node-command-db-a2<br/>PostgreSQL 15<br/>Port: 5434:5432)]
+                PythonCommandDBContainer[(python-command-db-a2<br/>PostgreSQL 15<br/>Port: 5435:5432)]
+            end
+
+            subgraph InfrastructureContainers[Infrastructure Containers]
+                RabbitMQContainer[RabbitMQ<br/>Container: rabbitmq-a2<br/>Ports: 5672, 15672<br/>Management UI Available]
+            end
+        end
+    end
+
+    NodeSensorContainer -->|Connection Pool| NodeSensorDBContainer
+    PythonSensorContainer -->|Connection Pool| PythonSensorDBContainer
+    NodeCommandContainer -->|Connection Pool| NodeCommandDBContainer
+    PythonCommandContainer -->|Connection Pool| PythonCommandDBContainer
+
+    NodeSensorContainer -->|AMQP| RabbitMQContainer
+    PythonSensorContainer -->|AMQP| RabbitMQContainer
+    NodeCommandContainer -->|AMQP| RabbitMQContainer
+    PythonCommandContainer -->|AMQP| RabbitMQContainer
+
+    NodeCommandContainer -->|HTTP Client| NodeSensorContainer
+    NodeCommandContainer -->|HTTP Client| PythonSensorContainer
+    PythonCommandContainer -->|HTTP Client| NodeSensorContainer
+    PythonCommandContainer -->|HTTP Client| PythonSensorContainer
+
+    style NodeSensorContainer fill:#e1f5ff
+    style PythonSensorContainer fill:#e1f5ff
+    style NodeCommandContainer fill:#fff4e1
+    style PythonCommandContainer fill:#fff4e1
+    style RabbitMQContainer fill:#ffe1f5
+    style NodeSensorDBContainer fill:#e1ffe1
+    style PythonSensorDBContainer fill:#e1ffe1
+    style NodeCommandDBContainer fill:#e1ffe1
+    style PythonCommandDBContainer fill:#e1ffe1
+```
+
 ## Key Features
 
 ### Database Per Service
@@ -400,44 +558,7 @@ All events follow this structure:
 5. **Test Rate Limiting**:
    Make rapid requests to any endpoint. After exceeding the limit, should receive 429 status.
 
-## Architecture Diagram
-
-```
-┌─────────────────┐         ┌─────────────────┐
-│  Sensor Service │         │  Sensor Service │
-│    (Node.js)    │         │    (Python)     │
-│   Port: 3000    │         │   Port: 8000    │
-└────────┬────────┘         └────────┬────────┘
-         │                           │
-         │                           │
-    ┌────▼────┐                 ┌────▼────┐
-    │ node_   │                 │ python_ │
-    │ sensor_ │                 │ sensor_ │
-    │   db    │                 │   db    │
-    └─────────┘                 └─────────┘
-         │                           │
-         │                           │
-         └───────────┬───────────────┘
-                     │
-              ┌──────▼──────┐
-              │  RabbitMQ   │
-              │  Event Bus   │
-              └──────┬──────┘
-                     │
-         ┌───────────┴───────────┐
-         │                       │
-┌────────▼────────┐     ┌────────▼────────┐
-│ Command Service │     │ Command Service │
-│   (Node.js)     │     │   (Python)      │
-│  Port: 3001     │     │  Port: 8001     │
-└────────┬────────┘     └────────┬────────┘
-         │                       │
-    ┌────▼────┐             ┌────▼────┐
-    │ node_   │             │ python_ │
-    │command_ │             │command_ │
-    │   db    │             │   db    │
-    └─────────┘             └─────────┘
-```
+> **Note**: See the [Architecture Diagrams](#architecture-diagrams) section below for detailed visual representations of the system architecture, sequence flows, and deployment topology.
 
 ## Key Differences from A1
 
