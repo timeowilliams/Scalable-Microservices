@@ -282,20 +282,18 @@ graph TB
 
 - Docker (v25.x or later)
 - Docker Compose (v2.x or later)
+- `curl` (for testing endpoints)
+- Optional: `jq` (for pretty JSON output)
 
-### Running All Services
+### Running the System Locally
+
+#### Step 1: Navigate to Assignment Directory
 
 ```bash
 cd A2
-docker compose up --build
 ```
 
-This will start:
-- 4 PostgreSQL databases
-- 4 application services (2 sensor + 2 command)
-- RabbitMQ with management UI (http://localhost:15672)
-
-### Environment Variables
+#### Step 2: Set Environment Variables (Optional)
 
 Set these before running (or use defaults):
 
@@ -303,6 +301,79 @@ Set these before running (or use defaults):
 export API_KEY=your-secure-api-key-here
 export LOG_LEVEL=info
 export WORKERS=2
+```
+
+**Default values:**
+- `API_KEY`: `default-api-key-change-me`
+- `LOG_LEVEL`: `info`
+- `WORKERS`: `2`
+
+#### Step 3: Start All Services
+
+```bash
+docker compose up --build
+```
+
+This will start:
+- 4 PostgreSQL databases (ports 5432, 5433, 5434, 5435)
+- 4 application services:
+  - Node.js Sensor Service (port 3000)
+  - Python Sensor Service (port 8000)
+  - Node.js Command Service (port 3001)
+  - Python Command Service (port 8001)
+- RabbitMQ with management UI (http://localhost:15672, credentials: admin/admin)
+
+#### Step 4: Verify Services Are Running
+
+```bash
+# Check all containers are up
+docker compose ps
+
+# Check service health
+curl http://localhost:3000/health  # Node.js Sensor
+curl http://localhost:8000/health  # Python Sensor
+curl http://localhost:3001/health  # Node.js Command
+curl http://localhost:8001/health  # Python Command
+```
+
+#### Step 5: Access RabbitMQ Management UI
+
+Open your browser and navigate to:
+- URL: http://localhost:15672
+- Username: `admin`
+- Password: `admin`
+
+#### Step 6: Run Integration Tests (Optional)
+
+```bash
+# Run the automated test suite
+./test-services.sh
+```
+
+#### Step 7: Stop Services
+
+```bash
+# Stop all services
+docker compose down
+
+# Stop and remove volumes (clean slate)
+docker compose down -v
+```
+
+### Running Services in Detached Mode
+
+```bash
+# Start in background
+docker compose up -d --build
+
+# View logs
+docker compose logs -f
+
+# View logs for specific service
+docker compose logs -f node-sensor-service
+
+# Stop services
+docker compose down
 ```
 
 ### Testing the Services
@@ -368,37 +439,27 @@ Access the RabbitMQ management interface at:
 
 ```
 A2/
-├── docker-compose.yml              # All services + databases + RabbitMQ
-├── node-service/                   # Sensor Service (Node.js)
-│   ├── src/
-│   │   ├── db/                    # Database connection pool
-│   │   ├── events/                # Event publishers
-│   │   ├── migrations/            # Database migrations
-│   │   └── ...
-│   └── Dockerfile
-├── python-service/                 # Sensor Service (Python)
-│   ├── src/
-│   │   ├── db/                    # Database connection pool
-│   │   ├── events/                # Event publishers
-│   │   ├── migrations/            # Database migrations
-│   │   └── ...
-│   └── Dockerfile
-├── command-node-service/           # Command & Control (Node.js)
-│   ├── src/
-│   │   ├── db/                    # Database connection pool
-│   │   ├── clients/               # HTTP clients (sync/async)
-│   │   ├── events/                # Event subscribers/publishers
-│   │   └── ...
-│   └── Dockerfile
-├── command-python-service/         # Command & Control (Python)
-│   ├── src/
-│   │   ├── db/                    # Database connection pool
-│   │   ├── clients/               # HTTP clients (sync/async)
-│   │   ├── events/                # Event subscribers/publishers
-│   │   └── ...
-│   └── Dockerfile
-└── README.md
+├── ADRs/                          # Architecture Decision Records
+│   ├── 001-database-per-service.md
+│   ├── 002-hybrid-communication.md
+│   └── 003-resilience-patterns.md
+├── node-service/                  # Node.js Sensor Service
+├── python-service/                # Python Sensor Service
+├── command-node-service/          # Node.js Command & Control Service
+├── command-python-service/       # Python Command & Control Service
+├── docker-compose.yml             # Service orchestration
+├── test-services.sh               # Integration test script
+├── demo-resilience.sh             # Resilience patterns demonstration
+└── README.md                      # This file
 ```
+
+## Architecture Decision Records (ADRs)
+
+Architecture decisions are documented in the [ADRs](ADRs/) folder:
+
+- [ADR-001: Database Per Service Pattern](ADRs/001-database-per-service.md)
+- [ADR-002: Hybrid Communication Pattern](ADRs/002-hybrid-communication.md)
+- [ADR-003: Resilience Patterns Implementation](ADRs/003-resilience-patterns.md)
 
 ## Resilience Patterns Implementation
 
@@ -558,6 +619,154 @@ All events follow this structure:
 5. **Test Rate Limiting**:
    Make rapid requests to any endpoint. After exceeding the limit, should receive 429 status.
 
+## Capturing Resilience Event Logs
+
+To demonstrate and document resilience patterns (circuit breakers, timeouts, retries), follow these steps:
+
+### 1. Circuit Breaker Demonstration
+
+#### Setup
+```bash
+# Start all services
+cd A2
+docker compose up -d
+
+# Wait for services to be ready
+sleep 15
+```
+
+#### Test Circuit Breaker Opening
+
+```bash
+# Stop the sensor service to simulate failure
+docker compose stop node-sensor-service
+
+# Make multiple requests to Command service (will fail)
+for i in {1..6}; do
+  echo "Request $i:"
+  curl -X POST http://localhost:3001/sensor-aggregate \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer default-api-key-change-me" \
+    -d '{"sensor_ids":["test_sensor"]}' 2>&1 | head -1
+  sleep 1
+done
+```
+
+#### Capture Logs
+```bash
+# View circuit breaker logs
+docker compose logs node-command-service | grep -i "circuit\|breaker\|OPEN\|CLOSED" > circuit-breaker-logs.txt
+
+# Or view in real-time
+docker compose logs -f node-command-service
+```
+
+**Expected Behavior:**
+- First 5 requests: Fail with connection errors
+- 6th request: Circuit breaker OPEN - immediate failure with "Circuit breaker is OPEN" message
+- After 30 seconds: Circuit breaker transitions to HALF_OPEN for testing
+
+### 2. Timeout Demonstration
+
+#### Test HTTP Timeout
+```bash
+# Simulate slow response by stopping service mid-request
+docker compose stop python-sensor-service
+
+# Make request with timeout (should timeout after 5-10 seconds)
+time curl -X GET http://localhost:8000/sensors/test_sensor \
+  -H "Authorization: Bearer default-api-key-change-me" \
+  --max-time 15
+```
+
+#### Capture Timeout Logs
+```bash
+# View timeout logs
+docker compose logs command-node-service | grep -i "timeout\|ETIMEDOUT" > timeout-logs.txt
+```
+
+### 3. Rate Limiting Demonstration
+
+#### Test Rate Limiting
+```bash
+# Make rapid requests to trigger rate limiting
+for i in {1..150}; do
+  curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3001/dashboards
+done | sort | uniq -c
+```
+
+#### Capture Rate Limit Logs
+```bash
+# View rate limit violations
+docker compose logs node-command-service | grep -i "rate\|limit\|429" > rate-limit-logs.txt
+```
+
+**Expected Behavior:**
+- First ~100 requests: 200 OK
+- Subsequent requests: 429 Too Many Requests
+
+### 4. Bulkhead Pattern Demonstration
+
+#### Monitor Connection Pools
+```bash
+# Check database connection pool usage
+docker compose logs node-sensor-service | grep -i "pool\|connection" > bulkhead-logs.txt
+
+# Check HTTP client pool usage (requires code instrumentation)
+docker compose logs node-command-service | grep -i "client\|pool" > http-pool-logs.txt
+```
+
+### 5. Complete Resilience Test Script
+
+Run the provided demonstration script:
+
+```bash
+# Run the resilience patterns demonstration
+./demo-resilience.sh
+```
+
+This script automatically demonstrates:
+- Circuit breaker opening and recovery
+- Rate limiting violations
+- Timeout handling
+- Logs all resilience events
+
+The script is located at `A2/demo-resilience.sh` and can be run directly:
+
+```bash
+cd A2
+./demo-resilience.sh
+```
+
+This script automatically demonstrates:
+- Circuit breaker opening and recovery
+- Rate limiting violations  
+- Timeout handling
+- Logs all resilience events
+```
+
+
+1. **RabbitMQ Management UI** (http://localhost:15672):
+   - Queues tab showing event queues
+   - Exchanges tab showing topic exchanges
+   - Connections tab showing service connections
+
+2. **Service Logs** showing:
+   - Circuit breaker state changes
+   - Timeout errors
+   - Rate limit violations (429 responses)
+   - Connection pool exhaustion
+
+3. **Docker Container Stats**:
+   ```bash
+   docker stats --no-stream > docker-stats.txt
+   ```
+
+4. **Test Results**:
+   ```bash
+   ./test-services.sh > test-results.txt
+   ```
+
 > **Note**: See the [Architecture Diagrams](#architecture-diagrams) section below for detailed visual representations of the system architecture, sequence flows, and deployment topology.
 
 ## Key Differences from A1
@@ -601,3 +810,10 @@ This assignment demonstrates:
 - ✅ Docker resource limits for isolation
 - ✅ Event-driven architecture with RabbitMQ
 - ✅ Synchronous and asynchronous API call patterns
+
+### Documentation
+
+- **Architecture Diagrams**: System architecture, sequence diagrams, and deployment topology
+- **Architecture Decision Records**: See [ADRs](ADRs/) folder for documented design decisions
+- **Resilience Demonstrations**: Run `./demo-resilience.sh` to see resilience patterns in action
+- **Integration Tests**: Run `./test-services.sh` to verify all services communicate correctly
