@@ -1,0 +1,58 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: a3-postgres
+    environment:
+      POSTGRES_DB: a3_pipeline_db
+      POSTGRES_USER: a3_user
+      POSTGRES_PASSWORD: a3_pass
+    ports:
+      - "5436:5432"
+    volumes:
+      - a3-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U a3_user -d a3_pipeline_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.55
+    container_name: a3-jaeger
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+
+  pipeline:
+    build: .
+    image: a3-pipeline:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: a3_pipeline_db
+      DB_USER: a3_user
+      DB_PASSWORD: a3_pass
+      QUEUE_MAXSIZE: "256"
+      WORKER_COUNT: "8"
+      LOG_LEVEL: INFO
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_TRACES_SAMPLE_RATIO: "0.05"
+    volumes:
+      - ./data:/app/data
+      - ./results:/app/results
+    networks:
+      - default
+
+networks:
+  default:
+    name: a3-network
+
+volumes:
+  a3-pg-data:

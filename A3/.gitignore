@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+data/large.jsonl
+data/medium.jsonl
+# keep small sample or regenerate; large files optional ignore
+# Regenerated locally; sample CSV may be committed for report
+# results/benchmark.csv
+!results/.gitkeep

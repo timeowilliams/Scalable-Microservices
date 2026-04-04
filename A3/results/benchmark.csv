@@ -1,0 +1,5 @@
+dataset,mode,event_count,duration_s,events_per_s,peak_rss_mb,errors,alerts
+small,blocking,1000,0.9239,1082.36,55.92,0,305
+small,reactive,1000,0.2109,4741.58,55.0,0,305
+medium,blocking,50000,53.9233,927.24,55.87,0,15250
+medium,reactive,50000,10.8378,4613.48,55.52,0,15250

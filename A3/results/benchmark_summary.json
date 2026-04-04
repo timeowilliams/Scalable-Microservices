@@ -1,0 +1,10 @@
+{
+  "dataset": "small",
+  "mode": "reactive",
+  "event_count": 1000,
+  "duration_s": 0.2109,
+  "events_per_s": 4741.58,
+  "peak_rss_mb": 55.0,
+  "errors": 0,
+  "alerts": 305
+}

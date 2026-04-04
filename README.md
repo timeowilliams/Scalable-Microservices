@@ -20,6 +20,7 @@ The project uses **Node.js** and **Python (FastAPI)** to compare two popular, pr
 - **RabbitMQ**: Message broker for event-driven communication (introduced in A2)
 - **Docker**: Containerization for consistent deployment
 - **Docker Compose**: Multi-container orchestration
+- **A3**: Python asyncio pipelines, PostgreSQL, OpenTelemetry/Jaeger, matplotlib benchmarks
 
 ## Assignments
 
@@ -59,7 +60,26 @@ Implements the database per service pattern with separate PostgreSQL databases f
 - Inter-service communication (HTTP/REST + RabbitMQ events)
 - Docker resource limits for service isolation
 
-### Assignment 3: [To be added]
+### [Assignment 3: Reactive / Async Pipeline & Performance Analysis](A3/)
+
+Mission-framed **sensor-to-C2** JSONL pipeline implemented **blocking** (sequential + `psycopg`) and **reactive** (bounded `asyncio.Queue` + worker pool + `asyncpg`). Includes **Docker Compose** (Postgres on port **5436**, **Jaeger**), **structured JSON logs**, **Prometheus metrics**, **OpenTelemetry** traces, **benchmark CSV**, and **matplotlib** charts.
+
+**Layout (high level):**
+
+| Path | Purpose |
+|------|---------|
+| [`A3/pipeline/`](A3/pipeline/) | CLI (`generate`, `run-blocking`, `run-reactive`), stages, DB layer, runners, observability |
+| [`A3/scripts/`](A3/scripts/) | `benchmark.sh`, `plot_results.py`, `generate_dataset.py` |
+| [`A3/results/`](A3/results/) | `benchmark.csv`, chart PNGs, optional summaries |
+| [`A3/data/`](A3/data/) | Generated JSONL datasets (large/medium may be gitignored) |
+| [`A3/ADRs/`](A3/ADRs/) | Architecture decision records for backpressure, dual runners, observability |
+| [`A3/docker-compose.yml`](A3/docker-compose.yml) | Postgres, Jaeger, `pipeline` image for batch runs |
+
+**Key features:**
+- Reproducible datasets (small / medium / large JSONL)
+- Backpressure via `QUEUE_MAXSIZE` on `asyncio.Queue` (see [ADR-001](A3/ADRs/001-bounded-queue-backpressure.md))
+- `scripts/benchmark.sh` and `scripts/plot_results.py`
+- [ADR-002](A3/ADRs/002-blocking-vs-reactive-persistence.md), [ADR-003](A3/ADRs/003-observability-stack.md)
 
 ## Project Structure
 
@@ -88,8 +108,17 @@ Implements the database per service pattern with separate PostgreSQL databases f
 │   ├── command-python-service/ # Python command & control service
 │   ├── docker-compose.yml   # Includes PostgreSQL, RabbitMQ, all services
 │   └── README.md
-├── A3/                      # Assignment 3: [To be added]
-└── README.md                # This file
+├── A3/                      # Assignment 3: Reactive pipeline + benchmarks + observability
+│   ├── ADRs/                # ADR-001 backpressure, ADR-002 blocking vs reactive, ADR-003 observability
+│   ├── pipeline/            # Python package: CLI, stages, db, blocking_runner, reactive_runner, observability
+│   ├── scripts/             # benchmark.sh, plot_results.py, generate_dataset.py
+│   ├── data/                # Generated JSONL (sample small; medium/large often local-only)
+│   ├── results/             # benchmark.csv, matplotlib PNGs
+│   ├── docker-compose.yml   # postgres:5436, jaeger:16686/4317, pipeline service
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── README.md
+└── README.md
 ```
 
 ## Getting Started
@@ -99,6 +128,7 @@ Each assignment has its own detailed README with specific setup and running inst
 - [Assignment 0 Setup](A0/README.md#getting-started)
 - [Assignment 1 Setup](A1/README.md#running-the-services)
 - [Assignment 2 Setup](A2/README.md)
+- [Assignment 3 Setup](A3/README.md#quick-start-docker)
 
 Each assignment contains its own isolated service implementations, allowing you to:
 - Run services independently for each assignment
