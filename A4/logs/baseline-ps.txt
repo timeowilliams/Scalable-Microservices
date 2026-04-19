@@ -1,0 +1,12 @@
+NAME                          IMAGE                           COMMAND                  SERVICE                  CREATED          STATUS                  PORTS
+a4-command-lb-1               nginx:alpine                    "/docker-entrypoint.…"   command-lb               3 minutes ago    Up 3 minutes            0.0.0.0:3001->3001/tcp, [::]:3001->3001/tcp
+a4-jaeger-1                   jaegertracing/all-in-one:1.55   "/go/bin/all-in-one-…"   jaeger                   3 days ago       Up 3 days               0.0.0.0:4317->4317/tcp, [::]:4317->4317/tcp, 0.0.0.0:16686->16686/tcp, [::]:16686->16686/tcp
+a4-node-command-db-1          postgres:15-alpine              "docker-entrypoint.s…"   node-command-db          3 days ago       Up 3 days (healthy)     
+a4-node-command-service-3     a4-node-command-service         "docker-entrypoint.s…"   node-command-service     12 seconds ago   Up Less than a second   
+a4-node-sensor-db-1           postgres:15-alpine              "docker-entrypoint.s…"   node-sensor-db           3 days ago       Up 3 days (healthy)     
+a4-node-sensor-service-1      a4-node-sensor-service          "docker-entrypoint.s…"   node-sensor-service      13 seconds ago   Up 3 seconds            0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
+a4-python-command-db-1        postgres:15-alpine              "docker-entrypoint.s…"   python-command-db        3 days ago       Up 3 days (healthy)     
+a4-python-command-service-1   a4-python-command-service       "./wait-for-it.sh py…"   python-command-service   12 seconds ago   Up Less than a second   
+a4-python-sensor-db-1         postgres:15-alpine              "docker-entrypoint.s…"   python-sensor-db         3 days ago       Up 3 days (healthy)     
+a4-python-sensor-service-1    a4-python-sensor-service        "./wait-for-it.sh py…"   python-sensor-service    13 seconds ago   Up 3 seconds            
+a4-rabbitmq-1                 rabbitmq:3-management-alpine    "docker-entrypoint.s…"   rabbitmq                 3 days ago       Up 3 days (healthy)     15672/tcp

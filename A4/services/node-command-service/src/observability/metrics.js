@@ -44,8 +44,69 @@ async function metricsHandler(req, res) {
   res.end(await register.metrics());
 }
 
+/**
+ * JSON snapshot for UIs: HTTP 5xx share over requests since the previous call.
+ * First call returns null percentages (warm-up); subsequent calls use counter deltas.
+ */
+function createObservabilitySummaryHandler(isMetricsEnabled) {
+  let prevSnapshot = null;
+
+  return async (req, res) => {
+    if (!isMetricsEnabled()) {
+      return res.json({
+        metricsEnabled: false,
+        command: {
+          httpErrorSharePercent: null,
+          requestsInWindow: null,
+          errors5xxInWindow: null,
+        },
+      });
+    }
+
+    const data = await httpRequestCount.get();
+    let requestsTotal = 0;
+    let errors5xx = 0;
+    for (const v of data.values) {
+      requestsTotal += v.value;
+      const code = String(v.labels.status_code || '');
+      if (code.startsWith('5')) errors5xx += v.value;
+    }
+
+    if (prevSnapshot === null) {
+      prevSnapshot = { requestsTotal, errors5xx };
+      return res.json({
+        metricsEnabled: true,
+        command: {
+          httpErrorSharePercent: null,
+          requestsInWindow: null,
+          errors5xxInWindow: null,
+        },
+      });
+    }
+
+    const requestsInWindow = requestsTotal - prevSnapshot.requestsTotal;
+    const errors5xxInWindow = errors5xx - prevSnapshot.errors5xx;
+    prevSnapshot = { requestsTotal, errors5xx };
+
+    const httpErrorSharePercent =
+      requestsInWindow > 0
+        ? Number(((errors5xxInWindow / requestsInWindow) * 100).toFixed(2))
+        : 0;
+
+    return res.json({
+      metricsEnabled: true,
+      command: {
+        httpErrorSharePercent,
+        requestsInWindow,
+        errors5xxInWindow,
+      },
+    });
+  };
+}
+
 module.exports = {
   register,
   httpMetricsMiddleware,
   metricsHandler,
+  createObservabilitySummaryHandler,
 };

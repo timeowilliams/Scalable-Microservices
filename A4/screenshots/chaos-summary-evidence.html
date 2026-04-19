@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>A4 chaos experiment summary</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 1.5rem; max-width: 52rem; background: #f6f7fb; color: #1a1d26; }
+    h1 { font-size: 1.1rem; }
+    table { border-collapse: collapse; width: 100%; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    th, td { text-align: left; padding: 0.6rem 0.75rem; border-bottom: 1px solid #e8eaf0; }
+    th { background: #eef1f8; font-weight: 600; }
+    .note { font-size: 0.85rem; color: #4a5568; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Chaos run outcomes (from A4/logs/*.json)</h1>
+  <table>
+    <thead><tr><th>Phase</th><th>Successes</th><th>Failures</th><th>p90 latency (ms)</th></tr></thead>
+    <tbody>
+      <tr><td>After single replica kill (2 of 3 still serving)</td><td>119</td><td>1</td><td>140</td></tr>
+      <tr><td>Command DB stopped</td><td>0</td><td>80</td><td>2054</td></tr>
+      <tr><td>DB recovered</td><td>80</td><td>0</td><td>216</td></tr>
+    </tbody>
+  </table>
+  <p class="note">Scenario A used docker kill on one container only; fleet restored before Scenario B. Full logs: chaos-after-kill.json, chaos-db-down.json, chaos-db-recovered.json.</p>
+</body>
+</html>

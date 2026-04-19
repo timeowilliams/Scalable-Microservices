@@ -58,6 +58,7 @@ Design highlights:
 2. Set secure API key in `.env`.
 3. Start stack:
    - `bash A4/scripts/bootstrap.sh`
+   - **Host ports:** `command-lb` (nginx, see `A4/nginx/command-lb.conf`) publishes **3001** and load-balances across `node-command-service` replicas so `docker compose --scale node-command-service=3` does not collide on the host. `node-sensor-service` publishes **3000** for local load tests and `curl` metrics.
 4. Verify health:
    - `curl -s http://localhost:3001/health`
    - `curl -s http://localhost:3000/health`
@@ -224,7 +225,7 @@ Purpose:
 - Provide commander/analyst operational view.
 - Use hybrid data:
   - real health telemetry from live services
-  - simulated mission events for scenario context
+  - optional live alerts + observability from `node-command-service`, or simulated mission stream from the UI (`simulation.ts`)
 
 Operator value:
 
@@ -239,10 +240,11 @@ npm install
 npm run dev
 ```
 
-Optional environment variables:
+Optional environment variables (see `ui/mission-command-ui/README.md`):
 
-- `VITE_COMMAND_BASE_URL` (default `http://localhost:3001`)
-- `VITE_SENSOR_BASE_URL` (default `http://localhost:3000`)
+- `VITE_COMMAND_BASE_URL` (default `http://localhost:3001`; use `/api/command` with Vite dev proxy)
+- `VITE_SENSOR_BASE_URL` (default `http://localhost:3000`; use `/api/sensor` with Vite dev proxy)
+- `VITE_USE_LIVE_MISSION_DATA` (`true` to poll `/alerts` and `/observability/summary` instead of frontend simulation)
 
 ## Finals Demo Runbook
 

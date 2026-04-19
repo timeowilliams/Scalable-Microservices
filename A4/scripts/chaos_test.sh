@@ -23,10 +23,19 @@ echo "Scenario A prediction: killing one command replica should increase p90 lat
 
 docker compose -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" up -d --scale node-command-service=3 node-command-service
 docker compose -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" ps > "${LOG_DIR}/chaos-before-kill.txt"
-docker compose -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" kill node-command-service
+CMD_ONE="$(docker compose -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" ps -q node-command-service | head -n 1)"
+if [[ -z "${CMD_ONE}" ]]; then
+  echo "No node-command-service replicas running"
+  exit 1
+fi
+# Kill one replica only (compose kill <service> stops every replica and breaks later scenarios).
+docker kill "${CMD_ONE}"
 sleep 5
 python3 "${ROOT_DIR}/scripts/run_load_test.py" --dataset-size 120 --token "${API_KEY}" --output "${LOG_DIR}/chaos-after-kill.json"
 docker compose -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" logs node-command-service > "${LOG_DIR}/chaos-after-kill.log"
+echo "Restoring command replica fleet before DB chaos..."
+docker compose -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" up -d --scale node-command-service=3 node-command-service
+sleep 8
 
 echo "Scenario B prediction: stopping command DB should trigger 5xx and increased queueing while service remains up."
 echo "Scenario B prediction: stopping command DB should trigger 5xx and increased queueing while service remains up." > "${LOG_DIR}/chaos-scenario-b-prediction.txt"

@@ -1,0 +1,11 @@
+{
+  "run_suffix": "1776638632328",
+  "events": 80,
+  "successes": 80,
+  "failures": 0,
+  "failure_rate": 0.0,
+  "throughput_events_per_sec": 8.747174017877118,
+  "latency_ms_p50": 97.25308351335116,
+  "latency_ms_p90": 215.97540837246925,
+  "latency_ms_mean": 114.32263699753094
+}

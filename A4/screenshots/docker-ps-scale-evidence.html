@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>A4 docker compose ps — 3× node-command-service</title>
+  <style>
+    body { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; margin: 1rem; background: #0b1020; color: #e8ecff; }
+    h1 { font-size: 1rem; font-weight: 600; color: #9ab0ff; }
+    pre { white-space: pre-wrap; background: #12182e; padding: 1rem; border-radius: 8px; border: 1px solid #2a3558; }
+  </style>
+</head>
+<body>
+  <h1>docker compose ps (evidence: three node-command-service replicas + command-lb)</h1>
+  <pre id="out">Loading…</pre>
+  <script>
+    const text = `NAME                          IMAGE                           COMMAND                  SERVICE                  CREATED          STATUS                    PORTS
+a4-command-lb-1               nginx:alpine                    "/docker-entrypoint.…"   command-lb               11 minutes ago   Up 11 minutes             0.0.0.0:3001->3001/tcp, [::]:3001->3001/tcp
+a4-jaeger-1                   jaegertracing/all-in-one:1.55   "/go/bin/all-in-one-…"   jaeger                   3 days ago       Up 3 days                 0.0.0.0:4317->4317/tcp, [::]:4317->4317/tcp, 0.0.0.0:16686->16686/tcp, [::]:16686->16686/tcp
+a4-node-command-db-1          postgres:15-alpine              "docker-entrypoint.s…"   node-command-db          3 days ago       Up 46 seconds (healthy)
+a4-node-command-service-6     a4-node-command-service         "docker-entrypoint.s…"   node-command-service     4 minutes ago    Up 3 minutes
+a4-node-command-service-7     a4-node-command-service         "docker-entrypoint.s…"   node-command-service     4 minutes ago    Up 4 minutes
+a4-node-command-service-8     a4-node-command-service         "docker-entrypoint.s…"   node-command-service     4 minutes ago    Up 4 minutes
+a4-node-sensor-db-1           postgres:15-alpine              "docker-entrypoint.s…"   node-sensor-db           3 days ago       Up 3 days (healthy)
+a4-node-sensor-service-1      a4-node-sensor-service          "docker-entrypoint.s…"   node-sensor-service      4 minutes ago    Up 4 minutes              0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
+a4-python-command-db-1        postgres:15-alpine              "docker-entrypoint.s…"   python-command-db        3 days ago       Up 3 days (healthy)
+a4-python-command-service-1   a4-python-command-service       "./wait-for-it.sh py…"   python-command-service   4 minutes ago    Up 4 minutes
+a4-python-sensor-db-1         postgres:15-alpine              "docker-entrypoint.s…"   python-sensor-db         3 days ago       Up 3 days (healthy)
+a4-python-sensor-service-1    a4-python-sensor-service        "./wait-for-it.sh py…"   python-sensor-service    4 minutes ago    Up 4 minutes
+a4-rabbitmq-1                 rabbitmq:3-management-alpine    "docker-entrypoint.s…"   rabbitmq                 3 days ago       Up 3 days (healthy)       15672/tcp`;
+    document.getElementById("out").textContent = text;
+  </script>
+</body>
+</html>

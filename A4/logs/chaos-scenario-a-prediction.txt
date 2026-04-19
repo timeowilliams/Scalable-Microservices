@@ -1,0 +1,1 @@
+Scenario A prediction: killing one command replica should increase p90 latency but keep partial availability.

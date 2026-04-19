@@ -1,0 +1,1 @@
+Scenario B prediction: stopping command DB should trigger 5xx and increased queueing while service remains up.

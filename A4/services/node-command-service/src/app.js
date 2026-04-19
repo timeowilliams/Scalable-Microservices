@@ -12,7 +12,11 @@ const rateLimiterMiddleware = require('./middleware/rateLimiter');
 const SensorClient = require('./clients/sensorClient');
 const { getPool, initializeDatabase } = require('./db/connection');
 const EventSubscriber = require('./events/eventSubscriber');
-const { httpMetricsMiddleware, metricsHandler } = require('./observability/metrics');
+const {
+  httpMetricsMiddleware,
+  metricsHandler,
+  createObservabilitySummaryHandler,
+} = require('./observability/metrics');
 
 function createApp() {
   const app = express();
@@ -72,6 +76,9 @@ function createApp() {
   if (config.isMetricsEnabled()) {
     app.get('/metrics', metricsHandler);
   }
+
+  const observabilitySummaryHandler = createObservabilitySummaryHandler(() => config.isMetricsEnabled());
+  app.get('/observability/summary', observabilitySummaryHandler);
 
   // Command routes
   const commandAuthMiddleware = authMiddleware(config, logger);

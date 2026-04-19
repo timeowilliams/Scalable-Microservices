@@ -1,0 +1,14 @@
+NAME                          CPU %     MEM USAGE / LIMIT     NET I/O
+a4-command-lb-1               0.06%     2.93MiB / 7.653GiB    5.81MB / 6.34MB
+a4-jaeger-1                   0.02%     104.2MiB / 7.653GiB   8.47MB / 1.92MB
+a4-node-command-db-1          0.18%     72.53MiB / 7.653GiB   714MB / 1.51GB
+a4-node-command-service-6     1.42%     147.8MiB / 7.653GiB   491MB / 232MB
+a4-node-command-service-7     1.33%     134.3MiB / 7.653GiB   1.91GB / 900MB
+a4-node-command-service-8     1.40%     153.3MiB / 7.653GiB   1.84GB / 868MB
+a4-node-sensor-db-1           2.08%     35.46MiB / 7.653GiB   1.8MB / 1.96MB
+a4-node-sensor-service-1      1.68%     114.4MiB / 7.653GiB   893kB / 1.52MB
+a4-python-command-db-1        2.16%     28.01MiB / 7.653GiB   82.1kB / 52.8kB
+a4-python-command-service-1   0.32%     110.3MiB / 7.653GiB   10.9kB / 7.72kB
+a4-python-sensor-db-1         2.02%     33.7MiB / 7.653GiB    81.3kB / 52.9kB
+a4-python-sensor-service-1    0.33%     95.45MiB / 7.653GiB   11.3kB / 7.2kB
+a4-rabbitmq-1                 0.34%     173.2MiB / 7.653GiB   1.32MB / 1.48MB

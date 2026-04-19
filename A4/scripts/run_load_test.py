@@ -27,10 +27,12 @@ def request_json(method: str, url: str, token: str, payload: dict | None = None,
 def run_dataset(base_url: str, token: str, size: int, timeout: float):
     latencies_ms = []
     failures = 0
+    # Unique per invocation so repeated experiments do not 409/400 on existing DB rows.
+    run_suffix = str(int(time.time() * 1000))
 
     for idx in range(size):
-        sensor_id = f"a4_sensor_{idx:05d}"
-        dashboard_id = f"a4_dashboard_{idx:05d}"
+        sensor_id = f"a4_sensor_{run_suffix}_{idx:05d}"
+        dashboard_id = f"a4_dashboard_{run_suffix}_{idx:05d}"
         sensor_payload = {
             "sensor_id": sensor_id,
             "type": "temperature" if idx % 2 == 0 else "motion",
@@ -70,6 +72,7 @@ def run_dataset(base_url: str, token: str, size: int, timeout: float):
         else max(latencies_ms, default=0.0)
     )
     return {
+        "run_suffix": run_suffix,
         "events": size,
         "successes": success,
         "failures": failures,

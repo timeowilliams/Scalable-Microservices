@@ -110,7 +110,9 @@ services:
         condition: service_healthy
       jaeger:
         condition: service_started
-    networks: [internal]
+    ports:
+      - "3000:3000"
+    networks: [internal, edge]
 
   python-sensor-service:
     build: ./services/python-sensor-service
@@ -170,8 +172,17 @@ services:
         condition: service_healthy
       jaeger:
         condition: service_started
+    networks: [internal]
+
+  command-lb:
+    image: nginx:alpine
+    depends_on:
+      node-command-service:
+        condition: service_started
     ports:
       - "3001:3001"
+    volumes:
+      - ./nginx/command-lb.conf:/etc/nginx/nginx.conf:ro
     networks: [internal, edge]
 
   python-command-service:
