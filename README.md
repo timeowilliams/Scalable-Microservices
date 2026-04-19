@@ -81,6 +81,17 @@ Mission-framed **sensor-to-C2** JSONL pipeline implemented **blocking** (sequent
 - `scripts/benchmark.sh` and `scripts/plot_results.py`
 - [ADR-002](A3/ADRs/002-blocking-vs-reactive-persistence.md), [ADR-003](A3/ADRs/003-observability-stack.md)
 
+### [Assignment 4: Capstone - Scaling, Hardening, Operations, and Mission UI](A4/)
+
+Capstone package focused on production-style operation of the polyglot microservices system: horizontal scaling experiments, chaos/failure testing, security hardening, observability-driven debugging, and final analysis reporting. A4 includes a mission-oriented web command view with hybrid live data (real service telemetry + simulated mission events).
+
+**Key features:**
+- Fully self-contained A4 source tree (`services/`, `ui/`, `scripts/`, `config/`, `diagrams/`)
+- Docker Compose runtime for multi-service operations with internal/edge network boundaries
+- Explicit backpressure controls and reproducible load/failure test scripts
+- Structured logs, metrics endpoints, and distributed tracing workflow
+- Professional report and finals demo runbook in `A4/README.md`
+
 ## Project Structure
 
 ```
@@ -118,6 +129,16 @@ Mission-framed **sensor-to-C2** JSONL pipeline implemented **blocking** (sequent
 │   ├── Dockerfile
 │   ├── requirements.txt
 │   └── README.md
+├── A4/                      # Assignment 4: Capstone scaling/security/observability + command UI
+│   ├── services/            # A4-contained Node/Python microservice source code
+│   ├── ui/                  # Mission command web application (React/TypeScript)
+│   ├── scripts/             # bootstrap, load tests, scale and chaos experiments
+│   ├── config/              # env template and security hardening notes
+│   ├── diagrams/            # architecture/security/observability diagrams
+│   ├── logs/                # experiment outputs and telemetry captures
+│   ├── screenshots/         # dashboard and runtime evidence
+│   ├── architecture-review.md
+│   └── README.md
 └── README.md
 ```
 
@@ -129,6 +150,7 @@ Each assignment has its own detailed README with specific setup and running inst
 - [Assignment 1 Setup](A1/README.md#running-the-services)
 - [Assignment 2 Setup](A2/README.md)
 - [Assignment 3 Setup](A3/README.md#quick-start-docker)
+- [Assignment 4 Setup](A4/README.md#running-the-a4-stack)
 
 Each assignment contains its own isolated service implementations, allowing you to:
 - Run services independently for each assignment
