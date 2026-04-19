@@ -1,0 +1,213 @@
+services:
+  node-sensor-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: node_sensor_db
+      POSTGRES_USER: sensor_user
+      POSTGRES_PASSWORD: sensor_pass
+    volumes:
+      - node-sensor-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sensor_user -d node_sensor_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 6
+    networks: [internal]
+
+  node-command-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: node_command_db
+      POSTGRES_USER: command_user
+      POSTGRES_PASSWORD: command_pass
+    volumes:
+      - node-command-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U command_user -d node_command_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 6
+    networks: [internal]
+
+  python-sensor-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: python_sensor_db
+      POSTGRES_USER: sensor_user
+      POSTGRES_PASSWORD: sensor_pass
+    volumes:
+      - python-sensor-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sensor_user -d python_sensor_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 6
+    networks: [internal]
+
+  python-command-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: python_command_db
+      POSTGRES_USER: command_user
+      POSTGRES_PASSWORD: command_pass
+    volumes:
+      - python-command-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U command_user -d python_command_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 6
+    networks: [internal]
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-admin}
+    ports:
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    networks: [internal]
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.55
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+    networks: [internal, edge]
+
+  node-sensor-service:
+    build: ./services/node-sensor-service
+    environment:
+      PORT: 3000
+      API_KEY: ${API_KEY}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      NODE_ENV: production
+      DB_HOST: node-sensor-db
+      DB_PORT: 5432
+      DB_NAME: node_sensor_db
+      DB_USER: sensor_user
+      DB_PASSWORD: sensor_pass
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672
+      WORKERS: ${SENSOR_WORKERS:-2}
+      ENABLE_METRICS: "true"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_SERVICE_NAME: node-sensor-service
+      ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-http://localhost:4173}
+      ENABLE_HSTS: "false"
+    depends_on:
+      node-sensor-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+    networks: [internal]
+
+  python-sensor-service:
+    build: ./services/python-sensor-service
+    environment:
+      PORT: 8000
+      API_KEY: ${API_KEY}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      PYTHON_ENV: production
+      DB_HOST: python-sensor-db
+      DB_PORT: 5432
+      DB_NAME: python_sensor_db
+      DB_USER: sensor_user
+      DB_PASSWORD: sensor_pass
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672
+      WORKERS: ${PYTHON_SENSOR_WORKERS:-2}
+    depends_on:
+      python-sensor-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks: [internal]
+
+  node-command-service:
+    build: ./services/node-command-service
+    environment:
+      PORT: 3001
+      API_KEY: ${API_KEY}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      NODE_ENV: production
+      DB_HOST: node-command-db
+      DB_PORT: 5432
+      DB_NAME: node_command_db
+      DB_USER: command_user
+      DB_PASSWORD: command_pass
+      SENSOR_SERVICE_URL: http://node-sensor-service:3000
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672
+      WORKERS: ${COMMAND_WORKERS:-2}
+      RATE_LIMIT_GENERAL_RPS: ${RATE_LIMIT_GENERAL_RPS:-120}
+      RATE_LIMIT_GENERAL_BURST: ${RATE_LIMIT_GENERAL_BURST:-240}
+      RATE_LIMIT_WRITE_RPS: ${RATE_LIMIT_WRITE_RPS:-60}
+      RATE_LIMIT_WRITE_BURST: ${RATE_LIMIT_WRITE_BURST:-120}
+      BACKPRESSURE_MAX_CONCURRENT_WRITES: ${BACKPRESSURE_MAX_CONCURRENT_WRITES:-16}
+      BACKPRESSURE_MAX_PENDING_WRITES: ${BACKPRESSURE_MAX_PENDING_WRITES:-48}
+      BACKPRESSURE_OVERLOAD_STRATEGY: ${BACKPRESSURE_OVERLOAD_STRATEGY:-delay}
+      BACKPRESSURE_MAX_QUEUE_WAIT_MS: ${BACKPRESSURE_MAX_QUEUE_WAIT_MS:-2000}
+      ENABLE_METRICS: "true"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_SERVICE_NAME: node-command-service
+      ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-http://localhost:4173}
+      ENABLE_HSTS: "false"
+    depends_on:
+      node-command-db:
+        condition: service_healthy
+      node-sensor-service:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+    ports:
+      - "3001:3001"
+    networks: [internal, edge]
+
+  python-command-service:
+    build: ./services/python-command-service
+    environment:
+      PORT: 8001
+      API_KEY: ${API_KEY}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      PYTHON_ENV: production
+      DB_HOST: python-command-db
+      DB_PORT: 5432
+      DB_NAME: python_command_db
+      DB_USER: command_user
+      DB_PASSWORD: command_pass
+      SENSOR_SERVICE_URL: http://python-sensor-service:8000
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672
+      WORKERS: ${PYTHON_COMMAND_WORKERS:-2}
+    depends_on:
+      python-command-db:
+        condition: service_healthy
+      python-sensor-service:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks: [internal]
+
+networks:
+  internal:
+    driver: bridge
+    internal: true
+  edge:
+    driver: bridge
+
+volumes:
+  node-sensor-db-data:
+  node-command-db-data:
+  python-sensor-db-data:
+  python-command-db-data:
+  rabbitmq-data:

@@ -743,7 +743,7 @@ This script automatically demonstrates:
 - Rate limiting violations  
 - Timeout handling
 - Logs all resilience events
-```
+
 
 
 1. **RabbitMQ Management UI** (http://localhost:15672):

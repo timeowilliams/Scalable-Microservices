@@ -1,0 +1,11 @@
+flowchart LR
+    client[LoadGenerator] --> cmdNode[NodeCommandServiceReplicas]
+    cmdNode --> sensorNode[NodeSensorService]
+    cmdNode --> rabbitmq[RabbitMQ]
+    cmdNode --> commandDb[NodeCommandPostgres]
+    sensorNode --> sensorDb[NodeSensorPostgres]
+    cmdNode --> jaeger[JaegerOTLP]
+    sensorNode --> jaeger
+    missionUi[MissionCommandUI] --> cmdNode
+    missionUi --> sensorNode
+    missionUi --> missionSim[MissionEventSimulation]

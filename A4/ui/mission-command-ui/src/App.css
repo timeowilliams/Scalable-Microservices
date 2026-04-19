@@ -1,0 +1,262 @@
+.app {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1rem;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.header h1 {
+  margin: 0.2rem 0 0.4rem;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+.lede {
+  margin: 0;
+  color: var(--muted);
+  max-width: 65ch;
+}
+
+.role-switch {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-width: 240px;
+}
+
+.role-switch label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.role-switch select {
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--panel-strong);
+  color: var(--text);
+  padding: 0.5rem 0.65rem;
+}
+
+.kpis {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.kpi-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  padding: 0.8rem;
+}
+
+.kpi-label {
+  margin: 0;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+}
+
+.kpi-value {
+  margin: 0.25rem 0;
+  font-size: 1.55rem;
+  font-weight: 600;
+}
+
+.kpi-trend {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.grid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.8rem;
+}
+
+.panel {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  padding: 0.9rem;
+}
+
+.panel-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 0.65rem;
+}
+
+.panel-head h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.updatedAt,
+.legend {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.status-list,
+.timeline {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.status-row,
+.timeline-row {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-strong);
+  padding: 0.6rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.badge {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 22px;
+  align-items: center;
+  border-radius: 99px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.73rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.badge.healthy {
+  background: rgba(35, 183, 115, 0.2);
+  color: #9af7cd;
+}
+
+.badge.degraded,
+.badge.medium {
+  background: rgba(219, 171, 38, 0.22);
+  color: #f6d58a;
+}
+
+.badge.down,
+.badge.high {
+  background: rgba(224, 124, 60, 0.22);
+  color: #ffba8f;
+}
+
+.badge.critical {
+  background: rgba(229, 80, 105, 0.25);
+  color: #ffc4d0;
+}
+
+.badge.low {
+  background: rgba(61, 158, 255, 0.2);
+  color: #b8dcff;
+}
+
+.svc-name,
+.event-summary {
+  font-weight: 600;
+}
+
+.svc-latency,
+.svc-detail,
+.event-meta {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.empty {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.6rem;
+}
+
+.mission-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-strong);
+  padding: 0.7rem;
+}
+
+.mission-card h3 {
+  margin: 0 0 0.45rem;
+  font-size: 0.95rem;
+}
+
+.mission-card p {
+  margin: 0 0 0.55rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.mission-card dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.15rem 0.6rem;
+  font-size: 0.82rem;
+}
+
+.mission-card dt {
+  color: var(--muted);
+}
+
+.mission-card dd {
+  margin: 0;
+}
+
+.footer-note {
+  margin-top: 0.9rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+@media (min-width: 640px) {
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

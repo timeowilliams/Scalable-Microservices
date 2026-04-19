@@ -1,0 +1,9 @@
+flowchart LR
+    client[ExternalClient] --> cmdNode[NodeCommandService]
+    client --> sensorNode[NodeSensorService]
+    client --> pyCmd[PythonCommandService]
+    client --> pySensor[PythonSensorService]
+    cmdNode --> rabbit[RabbitMQ]
+    sensorNode --> rabbit
+    cmdNode --> nodeCmdDb[NodeCommandDB]
+    sensorNode --> nodeSensorDb[NodeSensorDB]

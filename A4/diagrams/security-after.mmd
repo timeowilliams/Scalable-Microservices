@@ -1,0 +1,9 @@
+flowchart LR
+    client[ExternalClient] --> edge[NodeCommandServiceOnlyIngress]
+    missionUi[MissionCommandUI] --> edge
+    edge --> sensorNode[NodeSensorServiceInternalOnly]
+    edge --> rabbit[RabbitMQInternal]
+    sensorNode --> rabbit
+    edge --> nodeCmdDb[NodeCommandDBInternal]
+    sensorNode --> nodeSensorDb[NodeSensorDBInternal]
+    jaeger[JaegerUI] --> edge

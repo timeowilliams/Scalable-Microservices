@@ -1,0 +1,11 @@
+flowchart LR
+    client[ClientRequest] --> cmd[NodeCommandService]
+    cmd --> sensor[NodeSensorService]
+    cmd --> metricsCmd[MetricsEndpointCommand]
+    sensor --> metricsSensor[MetricsEndpointSensor]
+    cmd --> jaeger[JaegerOTLP]
+    sensor --> jaeger
+    logs[StructuredJSONLogs] --> incident[IncidentAnalysis]
+    metricsCmd --> incident
+    metricsSensor --> incident
+    jaeger --> incident

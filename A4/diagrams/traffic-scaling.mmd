@@ -1,0 +1,12 @@
+flowchart LR
+    loadGen[LoadGenerator] --> lb[DockerComposeRoundRobin]
+    lb --> cmd1[NodeCommandReplica1]
+    lb --> cmd2[NodeCommandReplica2]
+    lb --> cmd3[NodeCommandReplica3]
+    cmd1 --> sensor[NodeSensorService]
+    cmd2 --> sensor
+    cmd3 --> sensor
+    sensor --> sensorDb[NodeSensorDB]
+    cmd1 --> cmdDb[NodeCommandDB]
+    cmd2 --> cmdDb
+    cmd3 --> cmdDb
